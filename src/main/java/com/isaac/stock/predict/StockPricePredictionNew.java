@@ -28,7 +28,7 @@ public class StockPricePredictionNew {
 
     private static final Logger log = LoggerFactory.getLogger(StockPricePredictionNew.class);
 
-    private static int exampleLength = 22; // time series length, assume 22 working days per month
+    private static int exampleLength = 80; // time series length, assume 22 working days per month
 
     public static void main (String[] args) throws IOException {
         String file = new ClassPathResource("BTC_USDT_MIN5_2023-07-17T134746_2023-08-16T134746.csv").getFile().getAbsolutePath();
