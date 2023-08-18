@@ -35,18 +35,25 @@ public class StockPricePredictionNew {
         String symbol = "BTC";      // stock name
         int batchSize = 64;         // mini-batch size
         double splitRatio = 0.9;    // 90% for training, 10% for testing
+        PriceCategory category = PriceCategory.CLOSE;
 
-        tradingAndStoreModel(file, symbol, PriceCategory.CLOSE, batchSize, splitRatio);
-        loadModelAndShowPredictionGraph(file, symbol, PriceCategory.CLOSE, batchSize, splitRatio);
+        tradingAndStoreModel(file, symbol, category, batchSize, splitRatio);
+        loadModelAndShowPredictionGraph(file, symbol, category, batchSize, splitRatio);
+    }
+
+    private static File getFileModel(String symbol, PriceCategory category) {
+        return new File("src/main/resources/StockPriceLSTM_" + symbol + "_".concat(String.valueOf(category)).concat(".zip"));
     }
 
     @SneakyThrows
-    private static void loadModelAndShowPredictionGraph(String file, String symbol, PriceCategory category, int batchSize, double splitRatio) {
+    private static void loadModelAndShowPredictionGraph(String fileData, String symbol, PriceCategory category, int batchSize, double splitRatio) {
+        File fileModel = getFileModel(symbol, category);
+
         log.info("Create dataSet iterator...");
-        StockDataSetIterator iterator = new StockDataSetIterator(file, symbol, batchSize, exampleLength, splitRatio, category);
+        StockDataSetIterator iterator = new StockDataSetIterator(fileData, symbol, batchSize, exampleLength, splitRatio, category);
 
         log.info("Load model...");
-        MultiLayerNetwork net = ModelSerializer.restoreMultiLayerNetwork(file);
+        MultiLayerNetwork net = ModelSerializer.restoreMultiLayerNetwork(fileModel);
         log.info("Load test dataset...");
         List<Pair<INDArray, INDArray>> test = iterator.getTestDataSet();
 
@@ -75,13 +82,14 @@ public class StockPricePredictionNew {
 
         log.info("Training...");
         for (int i = 0; i < epochs; i++) {
+            log.info("iteration: " + i);
             while (iterator.hasNext()) net.fit(iterator.next()); // fit model using mini-batch data
             iterator.reset(); // reset iterator
             net.rnnClearPreviousState(); // clear previous state
         }
 
         log.info("Saving model...");
-        File locationToSave = new File("src/main/resources/StockPriceLSTM_" + symbol + "_".concat(String.valueOf(category)).concat(".zip"));
+        File locationToSave = getFileModel(symbol, category);
         // saveUpdater: i.e., the state for Momentum, RMSProp, Adagrad etc. Save this to train your network more in the future
         ModelSerializer.writeModel(net, locationToSave, true);
     }
