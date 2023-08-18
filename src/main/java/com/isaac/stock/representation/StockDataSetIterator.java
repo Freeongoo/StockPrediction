@@ -201,16 +201,19 @@ public class StockDataSetIterator implements DataSetIterator {
                 maxArray[i] = Double.MIN_VALUE;
                 minArray[i] = Double.MAX_VALUE;
             }
-            List<String[]> list = new CSVReader(new FileReader(filename)).readAll(); // load all elements in a list
+            List<String[]> list = new CSVReader(new FileReader(filename), ',', '\'', 1).readAll(); // load all elements in a list
             for (String[] arr : list) {
-                if (!arr[1].equals(symbol)) continue;
                 double[] nums = new double[VECTOR_SIZE];
-                for (int i = 0; i < arr.length - 2; i++) {
-                    nums[i] = Double.valueOf(arr[i + 2]);
+                for (int i = 0; i < arr.length - 1; i++) {
+                    int idx = i + 1;
+                    String s = arr[idx];
+                    nums[i] = Double.valueOf(s);
                     if (nums[i] > maxArray[i]) maxArray[i] = nums[i];
                     if (nums[i] < minArray[i]) minArray[i] = nums[i];
                 }
-                stockDataList.add(new StockData(arr[0], arr[1], nums[0], nums[1], nums[2], nums[3], nums[4]));
+                // date,open,high,low,close,volume
+                // String date, String symbol, double open, double close, double low, double high, double volume
+                stockDataList.add(new StockData(arr[0], symbol, nums[0], nums[3], nums[2], nums[1], nums[4]));
             }
         } catch (IOException e) {
             e.printStackTrace();
